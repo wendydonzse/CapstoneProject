@@ -6,23 +6,31 @@ from scipy.stats import zscore
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.seasonal import seasonal_decompose
 from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.metrics import mean_squared_error, r2_score
+
 import numpy as np
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.svm import SVR
+from keras.models import Sequential
+from keras.layers import Dense
 
 import joblib
+from pmdarima import auto_arima
+
 
 
 
 st.set_page_config(layout='wide')
 
-st.header('Forecaster')
+st.header('NO2 level Forecaster')
 
 
-data_file = st.file_uploader('Upload file containing timestamps',type='csv')
+data_file = st.file_uploader('Upload file containing Timestamp and Value',type='csv')
 
 df = pd.DataFrame()
 
@@ -36,7 +44,7 @@ col1,col2 =  st.columns(2)
 # st.write('Your data: ',df.head(5))
 col1.write("Your data:")
 # col1.write(df.head(5))
-col1.dataframe(df,height=250,width=600)
+col1.dataframe(df,height=250,use_container_width=True)
 
 
 
@@ -108,9 +116,14 @@ if len(df)>0 and 'Value' in df.columns:
 
 
     # st.write('Preprocessed data: ',df_cleaned.head(5))
+
+
+    # with col2.container():
     col2.write("Preprocessed data:")
     # col2.write(df_cleaned.head(5))
-    col2.dataframe(df_cleaned,height=250,width=600)
+    col2.dataframe(df_cleaned,height=250,use_container_width=True)
+
+
 
 
 
@@ -303,7 +316,9 @@ if len(df)>0 and 'Value' in df.columns:
     with col2.container(height=500):
 
         st.markdown('')
+        plt.figure(figsize=(10, 6))
 
+        # Create the boxplot
         data_selected.boxplot()
 
         # Set title and labels
@@ -311,10 +326,7 @@ if len(df)>0 and 'Value' in df.columns:
         plt.xlabel('NO2')
         plt.ylabel('Values')
 
-        # Show the plot
-        plt.show()
-
-
+        # Render the plot in Streamlit
         st.pyplot(plt)
 
 
@@ -420,108 +432,110 @@ if len(df)>0 and 'Value' in df.columns:
         st.pyplot(plt)
 
 
+
+    # filtered_data = data_arima[(data_arima['Timestamp'].dt.year == 2024) & (data_arima['Timestamp'].dt.month.isin([10, 11]))]
+    # filtered_data.to_csv(r'No2_filtered_data.csv', index=False)
+    # Load the data
+    filtered_data = pd.read_csv('No2_data_arima.csv', parse_dates=['DateHour'], index_col='DateHour', dayfirst=True)
+    # Convert index to DatetimeIndex if not already done
+    filtered_data.index = pd.to_datetime(filtered_data.index)
+
+
+    result = seasonal_decompose(filtered_data['Value'], model='additive', period=24)  # Assuming hourly data withValue daily seasonality
+
+    # Plot the decomposition
+    plt.figure(figsize=(12, 8))
+
+    plt.subplot(411)
+    plt.plot(filtered_data.index, data_arima['Value'], label='Original')
+    plt.legend(loc='upper left')
+    plt.gca().xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%m-%d'))  # Format the x-axis as "YYYY-MM-DD"
+
+    plt.subplot(412)
+    plt.plot(filtered_data.index, result.trend, label='Trend')
+    plt.legend(loc='upper left')
+    plt.gca().xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%m-%d'))  # Format the x-axis as "YYYY-MM-DD"
+
+    plt.subplot(413)
+    plt.plot(filtered_data.index, result.seasonal, label='Seasonal')
+    plt.legend(loc='upper left')
+    plt.gca().xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%m-%d'))  # Format the x-axis as "YYYY-MM-DD"
+
+    plt.subplot(414)
+    plt.plot(filtered_data.index, result.resid, label='Residual')
+    plt.legend(loc='upper left')
+    plt.gca().xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%m-%d'))  # Format the x-axis as "YYYY-MM-DD"
+
+    plt.tight_layout()
+    plt.show()
+
     with col2.container(height=500):
-
-        st.markdown('')
-
-
-        # Convert index to DatetimeIndex if not already done
-        data_arima.index = pd.to_datetime(data_arima.index)
-
-        # Set the start date explicitly if needed
-        start_date = '2024-11-02 16:00:00'
-        data_arima.index = pd.date_range(start=start_date, periods=len(data_arima), freq='H')  # Assuming hourly frequency
-
-        # Perform seasonal decomposition
-        result = seasonal_decompose(data_arima['Value'], model='additive', period=24)  # Set period to 24 hours in a day 
-
-        # Plot the decomposition
-        plt.figure(figsize=(12, 8))
-
-        plt.subplot(411)
-        plt.plot(data_arima.index, data_arima['Value'], label='Original')
-        plt.legend(loc='upper left')
-        plt.gca().xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%m-%d'))  # Format the x-axis as "YYYY-MM-DD"
-
-        plt.subplot(412)
-        plt.plot(data_arima.index, result.trend, label='Trend')
-        plt.legend(loc='upper left')
-        plt.gca().xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%m-%d'))  # Format the x-axis as "YYYY-MM-DD"
-
-        plt.subplot(413)
-        plt.plot(data_arima.index, result.seasonal, label='Seasonal')
-        plt.legend(loc='upper left')
-        plt.gca().xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%m-%d'))  # Format the x-axis as "YYYY-MM-DD"
-
-        plt.subplot(414)
-        plt.plot(data_arima.index, result.resid, label='Residual')
-        plt.legend(loc='upper left')
-        plt.gca().xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%m-%d'))  # Format the x-axis as "YYYY-MM-DD"
-
-        plt.tight_layout()
-        plt.show()
 
         st.pyplot(plt)
 
-    # Load the data
-    data_arima = pd.read_csv('No2_data_arima.csv', parse_dates=['DateHour'], index_col='DateHour', dayfirst=True)
-    # Convert index to DatetimeIndex if not already done
-    data_arima.index = pd.to_datetime(data_arima.index)
 
+    st.markdown('') # For adding vertical line space
+    st.markdown('')
+    st.markdown('') 
+
+
+    st.subheader('Forecast results by arima: ')
+    
+
+
+    # Fit ARIMA model
+    model = auto_arima(filtered_data['Value'], seasonal=True, m=24, trace=True, error_action='ignore', suppress_warnings=True)
+    print(model.summary())
+
+    # Forecast the next 24 hours
+    forecast = model.predict(n_periods=24)
+    print(forecast)
+
+    # Plot the forecast
+    plt.figure(figsize=(10, 5))
+    plt.plot(filtered_data.index, filtered_data['Value'], label='Historical')
+    # plt.plot(pd.date_range(data_arima.index[-1], periods=25, freq='H')[1:], forecast, label='Forecast', color='red')
+    plt.plot(pd.date_range(filtered_data.index[-1], periods=25, freq='H')[1:], forecast, label='Forecast', color='red')
+
+    
+    plt.legend()
+    plt.show()
+
+
+    col1,col2 =  st.columns(2) 
 
     with col1.container(height=500):
 
-        st.markdown('')
-
-        # Perform seasonal decomposition
-        result = seasonal_decompose(data_arima['Value'], model='additive', period=24)  # Assuming hourly data with daily seasonality
-
-        # Plot the decomposition
-        plt.figure(figsize=(12, 8))
-
-        plt.subplot(411)
-        plt.plot(data_arima.index, data_arima['Value'], label='Original')
-        plt.legend(loc='upper left')
-        plt.gca().xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%m-%d'))  # Format the x-axis as "YYYY-MM-DD"
-
-        plt.subplot(412)
-        plt.plot(data_arima.index, result.trend, label='Trend')
-        plt.legend(loc='upper left')
-        plt.gca().xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%m-%d'))  # Format the x-axis as "YYYY-MM-DD"
-
-        plt.subplot(413)
-        plt.plot(data_arima.index, result.seasonal, label='Seasonal')
-        plt.legend(loc='upper left')
-        plt.gca().xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%m-%d'))  # Format the x-axis as "YYYY-MM-DD"
-
-        plt.subplot(414)
-        plt.plot(data_arima.index, result.resid, label='Residual')
-        plt.legend(loc='upper left')
-        plt.gca().xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%m-%d'))  # Format the x-axis as "YYYY-MM-DD"
-
-        plt.tight_layout()
-        plt.show()
-
-
         st.pyplot(plt)
 
+    with col2.container(height=500):
+
+        st.dataframe(forecast)
+
+        # st.write(data_arima.index[-1],forecast)
+        # st.write(filtered_data,forecast)
+        # st.write(filtered_data,forecast)
+        # st.write(filtered_data.index[-1])
 
 
 
 
-if len(df)>0:
+
 
     # ML Model
     #
     #
 
-
-    model_selection = st.selectbox('Choose a model for forecasting:',options=['Random Forest','Gradient Boost Regressor'], index=None)
+    st.markdown('')
+    st.markdown('') 
+    model_selection = st.selectbox('Choose a model for forecasting (Random Forest seems to provide better results):',options=['Random Forest','Gradient Boost Regressor','SVR','ANN'], index=None)
 
 
     if model_selection :
 
-        data = df[['Timestamp']]
+        data_cleaned = pd.read_csv('NO2_07112024_NoOutliers.csv')
+        data = data_cleaned[['Timestamp', 'Value']]
+
         data['Timestamp'] = pd.to_datetime(data['Timestamp'])
 
         # Check for missing values
@@ -529,22 +543,186 @@ if len(df)>0:
             
         # Extract features and target variable
         X = data.index.astype(int).values.reshape(-1, 1)  # Use timestamp as a feature
+        y = data['Value'].values
+
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+
+
 
         if model_selection == 'Random Forest':
 
-            model = joblib.load('rf_model.pkl')
 
             # Scale the features
             scaler = StandardScaler()
             X_scaled = scaler.fit_transform(X)
             X = X_scaled
 
+            # Split the data into training and testing sets
+            X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+
+
+            # Initialize the Random Forest Regressor
+            model = RandomForestRegressor(n_estimators=100, max_depth=None, random_state=42)
+
+            # Train the model
+            model.fit(X_train, y_train)
+
+            # Make predictions
+            y_pred = model.predict(X_test)
+
+            # Evaluate the model
+            mse = mean_squared_error(y_test, y_pred)
+            r2 = r2_score(y_test, y_pred)
+
+            print(f"Mean Squared Error: {mse}")
+            print(f"R^2 Score: {r2}")
+
+
+            plt.figure(figsize=(10, 5))
+            plt.scatter(X_test, y_test, color='blue', label='Actual')
+            plt.scatter(X_test, y_pred, color='red', label='Predicted')
+            plt.xlabel('Timestamp')
+            plt.ylabel('NO2 Value')
+            plt.title('Random Forest Regression on NO2 Data')
+            plt.legend()
+            plt.show()
+
+            st.pyplot(plt)
+
+
+
+
+            # model = joblib.load('rf_model.pkl')
+
+
+
 
         if model_selection == 'Gradient Boost Regressor':
 
-            model = joblib.load('gb_model.pkl')
+            # model = joblib.load('gb_model.pkl')
+
+            # Initialize the Gradient Boosting Regressor
+            model = GradientBoostingRegressor(n_estimators=100, learning_rate=0.1, max_depth=3, random_state=42)
+
+            # Train the model
+            model.fit(X_train, y_train)
 
 
+
+            # Make predictions
+            y_pred = model.predict(X_test)
+
+            # Evaluate the model
+            mse = mean_squared_error(y_test, y_pred)
+            r2 = r2_score(y_test, y_pred)
+
+            print(f"Mean Squared Error: {mse}")
+            print(f"R^2 Score: {r2}")
+
+            # Plot the results
+
+            plt.figure(figsize=(10, 5))
+            plt.scatter(X_test, y_test, color='blue', label='Actual')
+            plt.scatter(X_test, y_pred, color='red', label='Predicted')
+            plt.xlabel('Timestamp')
+            plt.ylabel('NO2 Value')
+            plt.title('Gradient Boosting Regression on NO2 Data')
+            plt.legend()
+            plt.show()
+
+            st.pyplot(plt)
+
+        if model_selection == 'SVR':
+
+
+            # Initialize and train the SVR model
+            model = SVR(kernel='rbf', C=1.0, epsilon=0.1)
+            model.fit(X_train, y_train)
+
+
+            # Make predictions
+            y_pred = model.predict(X_test)
+
+            # Evaluate the model
+            mse = mean_squared_error(y_test, y_pred)
+            r2 = r2_score(y_test, y_pred)
+
+            print(f"Mean Squared Error: {mse}")
+            print(f"R^2 Score: {r2}")
+
+
+            plt.figure(figsize=(10, 5))
+            plt.scatter(X_test, y_test, color='blue', label='Actual')
+            plt.scatter(X_test, y_pred, color='red', label='Predicted')
+            plt.xlabel('Timestamp')
+            plt.ylabel('NO2 Value')
+            plt.title('Support Vector Regression on NO2 Data')
+            plt.legend()
+            plt.show()
+
+            st.pyplot(plt)
+
+        if model_selection=='ANN':
+
+
+
+            # Initialize the ANN
+            model = Sequential()
+
+            # Add input layer and first hidden layer
+            model.add(Dense(units=64, activation='relu', input_dim=X_train.shape[1]))
+
+            # Add second hidden layer
+            model.add(Dense(units=32, activation='relu'))
+
+            # Add output layer
+            model.add(Dense(units=1))
+
+            # Compile the ANN
+            model.compile(optimizer='adam', loss='mean_squared_error')
+
+
+            history = model.fit(X_train, y_train, epochs=100, batch_size=32, validation_split=0.2, verbose=1)
+
+            # Evaluate the model on the test set
+            y_pred = model.predict(X_test)
+
+            # Calculate performance metrics
+
+            mse = mean_squared_error(y_test, y_pred)
+            r2 = r2_score(y_test, y_pred)
+
+            print(f"Mean Squared Error: {mse}")
+            print(f"R^2 Score: {r2}")
+
+            # Plot the training and validation loss
+
+            plt.figure(figsize=(10, 5))
+            plt.plot(history.history['loss'], label='Training Loss')
+            plt.plot(history.history['val_loss'], label='Validation Loss')
+            plt.xlabel('Epochs')
+            plt.ylabel('Loss')
+            plt.title('Training and Validation Loss')
+            plt.legend()
+            plt.show()
+
+            # Plot the results
+            plt.figure(figsize=(10, 5))
+            plt.scatter(X_test, y_test, color='blue', label='Actual')
+            plt.scatter(X_test, y_pred, color='red', label='Predicted')
+            plt.xlabel('Timestamp')
+            plt.ylabel('NO2 Value')
+            plt.title('ANN Regression on NO2 Data')
+            plt.legend()
+            plt.show()
+
+            st.pyplot(plt)
+
+
+
+
+        # Make predictions
 
         y_pred = model.predict(X)
 

@@ -361,102 +361,102 @@ if len(df)>0 and 'Value' in df.columns:
     data_selected['Hour'] = data_selected['Timestamp'].dt.hour
     data_selected['Date'] = data_selected['Timestamp'].dt.date 
     data_selected['DateHour'] = data_selected['Timestamp'].dt.strftime('%d/%m/%Y %H:%M') 
-    data_arima = data_selected[['DateHour', 'Value']]
+    # data_arima = data_selected[['DateHour', 'Value']]
 
 
-    del data_selected # As it is no longer required
-    gc.collect()
+    # del data_selected # As it is no longer required
+    # gc.collect()
 
-    data_arima.to_csv(r'No2_data_arima.csv', index=False)
+    # data_arima.to_csv(r'No2_data_arima.csv', index=False)
 
-    data_arima = pd.read_csv('No2_data_arima.csv')
-    # Convert the "DateHour" column to datetime format
-    data_arima['DateHour'] = pd.to_datetime(data_arima['DateHour'], dayfirst = True)
+    # data_arima = pd.read_csv('No2_data_arima.csv')
+    # # Convert the "DateHour" column to datetime format
+    # data_arima['DateHour'] = pd.to_datetime(data_arima['DateHour'], dayfirst = True)
 
-    # Sort the DataFrame by the "Date" column to ensure that the timestamps are in ascending order.
-    data_arima = data_arima.sort_values(by='DateHour')
+    # # Sort the DataFrame by the "Date" column to ensure that the timestamps are in ascending order.
+    # data_arima = data_arima.sort_values(by='DateHour')
 
-    # Calculate the time differences between consecutive timestamps
-    time_diffs = data_arima['DateHour'].diff()
-
-
-
-
-    with col1.container(height=600):
-
-        c1,c2,c3 = st.columns([2,3,1])
-        c2.subheader('ACF Plot')
-        # Plot ACF
-        plot_acf(data_arima['Value'], lags=48)  # Change lags value according to your data
-        plt.title('ACF Plot')
-        plt.xlabel('Lag')
-        plt.ylabel('Autocorrelation')
-        plt.show()
-
-        st.pyplot(plt)
-
-
-
-    with col2.container(height=600):
-
-        c1,c2,c3 = st.columns([2,3,1])
-        c2.subheader('PACF Plot')
-        # Plot PACF
-        plot_pacf(data_arima['Value'], lags=48)  # Change lags value according to your data
-        plt.title('PACF Plot')
-        plt.xlabel('Lag')
-        plt.ylabel('Partial Autocorrelation')
-        plt.show()
-
-
-
-        st.pyplot(plt)
+    # # Calculate the time differences between consecutive timestamps
+    # time_diffs = data_arima['DateHour'].diff()
 
 
 
 
+    # with col1.container(height=600):
+
+    #     c1,c2,c3 = st.columns([2,3,1])
+    #     c2.subheader('ACF Plot')
+    #     # Plot ACF
+    #     plot_acf(data_arima['Value'], lags=48)  # Change lags value according to your data
+    #     plt.title('ACF Plot')
+    #     plt.xlabel('Lag')
+    #     plt.ylabel('Autocorrelation')
+    #     plt.show()
+
+    #     st.pyplot(plt)
 
 
 
-    # filtered_data = data_arima[(data_arima['Timestamp'].dt.year == 2024) & (data_arima['Timestamp'].dt.month.isin([10, 11]))]
-    # filtered_data.to_csv(r'No2_filtered_data.csv', index=False)
-    # Load the data
-    filtered_data = pd.read_csv('No2_data_arima.csv', parse_dates=['DateHour'], index_col='DateHour', dayfirst=True)
-    # Convert index to DatetimeIndex if not already done
-    filtered_data.index = pd.to_datetime(filtered_data.index)
+    # with col2.container(height=600):
+
+    #     c1,c2,c3 = st.columns([2,3,1])
+    #     c2.subheader('PACF Plot')
+    #     # Plot PACF
+    #     plot_pacf(data_arima['Value'], lags=48)  # Change lags value according to your data
+    #     plt.title('PACF Plot')
+    #     plt.xlabel('Lag')
+    #     plt.ylabel('Partial Autocorrelation')
+    #     plt.show()
 
 
-    result = seasonal_decompose(filtered_data['Value'], model='additive', period=24)  # Assuming hourly data withValue daily seasonality
 
-    # Plot the decomposition
-    plt.figure(figsize=(12, 8))
+    #     st.pyplot(plt)
 
-    plt.subplot(411)
-    plt.plot(filtered_data.index, data_arima['Value'], label='Original')
-    plt.legend(loc='upper left')
-    plt.gca().xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%m-%d'))  # Format the x-axis as "YYYY-MM-DD"
 
-    plt.subplot(412)
-    plt.plot(filtered_data.index, result.trend, label='Trend')
-    plt.legend(loc='upper left')
-    plt.gca().xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%m-%d'))  # Format the x-axis as "YYYY-MM-DD"
 
-    plt.subplot(413)
-    plt.plot(filtered_data.index, result.seasonal, label='Seasonal')
-    plt.legend(loc='upper left')
-    plt.gca().xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%m-%d'))  # Format the x-axis as "YYYY-MM-DD"
 
-    plt.subplot(414)
-    plt.plot(filtered_data.index, result.resid, label='Residual')
-    plt.legend(loc='upper left')
-    plt.gca().xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%m-%d'))  # Format the x-axis as "YYYY-MM-DD"
 
-    plt.tight_layout()
-    plt.show()
 
-    with col1.container(height=600):
 
-        st.pyplot(plt)
+    # # filtered_data = data_arima[(data_arima['Timestamp'].dt.year == 2024) & (data_arima['Timestamp'].dt.month.isin([10, 11]))]
+    # # filtered_data.to_csv(r'No2_filtered_data.csv', index=False)
+    # # Load the data
+    # filtered_data = pd.read_csv('No2_data_arima.csv', parse_dates=['DateHour'], index_col='DateHour', dayfirst=True)
+    # # Convert index to DatetimeIndex if not already done
+    # filtered_data.index = pd.to_datetime(filtered_data.index)
+
+
+    # result = seasonal_decompose(filtered_data['Value'], model='additive', period=24)  # Assuming hourly data withValue daily seasonality
+
+    # # Plot the decomposition
+    # plt.figure(figsize=(12, 8))
+
+    # plt.subplot(411)
+    # plt.plot(filtered_data.index, data_arima['Value'], label='Original')
+    # plt.legend(loc='upper left')
+    # plt.gca().xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%m-%d'))  # Format the x-axis as "YYYY-MM-DD"
+
+    # plt.subplot(412)
+    # plt.plot(filtered_data.index, result.trend, label='Trend')
+    # plt.legend(loc='upper left')
+    # plt.gca().xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%m-%d'))  # Format the x-axis as "YYYY-MM-DD"
+
+    # plt.subplot(413)
+    # plt.plot(filtered_data.index, result.seasonal, label='Seasonal')
+    # plt.legend(loc='upper left')
+    # plt.gca().xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%m-%d'))  # Format the x-axis as "YYYY-MM-DD"
+
+    # plt.subplot(414)
+    # plt.plot(filtered_data.index, result.resid, label='Residual')
+    # plt.legend(loc='upper left')
+    # plt.gca().xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%m-%d'))  # Format the x-axis as "YYYY-MM-DD"
+
+    # plt.tight_layout()
+    # plt.show()
+
+    # with col1.container(height=600):
+
+    #     st.pyplot(plt)
 
 
     st.markdown('') # For adding vertical line space
@@ -708,54 +708,55 @@ if len(df)>0 and 'Value' in df.columns:
                 st.dataframe(results_df, use_container_width=True)
 
 
+            st.markdown('')
+            with st.container(border=2):
+                st.subheader('On Average Training Results looks like: ')
+                data = {
+                    "Models": [
+                        "Support Vector Regression (SVR)",
+                        "Gradient Boosting Regression (GBR)",
+                        "Random Forest Regression (RFR)",
+                        "Artificial Neural Networks (ANN)",
+                    ],
+                    "Results": [
+                        "Mean Squared Error: 87.58514344123985\nR² Score: -0.011607182429077727",
+                        "Mean Squared Error: 74.07997087517605\nR² Score: 0.14432439075618184",
+                        "Mean Squared Error: 20.9620748988467\nR² Score: 0.7578883340766396",
+                        "Mean Squared Error: 82.54095167346962\nR² Score: 0.04665307590534107",
+                    ],
+                    "Analysis": [
+                        "The SVR model has the highest MSE and a negative R² score, indicating poor performance and that the model does not fit the data well.",
+                        "The GBR model performs better than SVR with a lower MSE and a positive R² score, suggesting a better fit to the data but still not optimal.",
+                        "The RFR model has the lowest MSE and the highest R² score, indicating the best performance among the 4 models. It suggests a good fit to the data.",
+                        "ANN has a relatively high MSE and a low R² score, showing moderate performance.",
+                    ],
+                }
+
+                # Create a DataFrame
+                df = pd.DataFrame(data)
+
+                # Streamlit layout
+                # st.title("Machine Learning Model Performance")
+
+                # Display the table
+                st.table(df)
+
+                
+                st.markdown("""
+                    ### **Conclusion**
+                    - The **Random Forest Regression** model outperforms the other models in terms of both MSE and R² score, making it the most effective model for this dataset.
+                        
+                    - **ARIMA models** are ideal for simpler, univariate time series with clear trends and seasonality, where interpretability is important.
+                    - **Machine learning models** are better suited for complex, high-dimensional datasets with non-linear relationships, external factors, and long-term forecasting needs.
+
+                    The choice between the two depends on the nature of the data, the complexity of the problem, and the forecasting requirements. In practice, hybrid approaches (e.g., combining ARIMA with machine learning) are also common to leverage the strengths of both methods.
+                """)
+
+
+
 
 
     train_models()
-
-    st.markdown('')
-    with st.container(border=2):
-        st.subheader('On Average Training Results looks like: ')
-        data = {
-            "Models": [
-                "Support Vector Regression (SVR)",
-                "Gradient Boosting Regression (GBR)",
-                "Random Forest Regression (RFR)",
-                "Artificial Neural Networks (ANN)",
-            ],
-            "Results": [
-                "Mean Squared Error: 87.58514344123985\nR² Score: -0.011607182429077727",
-                "Mean Squared Error: 74.07997087517605\nR² Score: 0.14432439075618184",
-                "Mean Squared Error: 20.9620748988467\nR² Score: 0.7578883340766396",
-                "Mean Squared Error: 82.54095167346962\nR² Score: 0.04665307590534107",
-            ],
-            "Analysis": [
-                "The SVR model has the highest MSE and a negative R² score, indicating poor performance and that the model does not fit the data well.",
-                "The GBR model performs better than SVR with a lower MSE and a positive R² score, suggesting a better fit to the data but still not optimal.",
-                "The RFR model has the lowest MSE and the highest R² score, indicating the best performance among the 4 models. It suggests a good fit to the data.",
-                "ANN has a relatively high MSE and a low R² score, showing moderate performance.",
-            ],
-        }
-
-        # Create a DataFrame
-        df = pd.DataFrame(data)
-
-        # Streamlit layout
-        # st.title("Machine Learning Model Performance")
-
-        # Display the table
-        st.table(df)
-
-        
-        st.markdown("""
-            ### **Conclusion**
-            - The **Random Forest Regression** model outperforms the other models in terms of both MSE and R² score, making it the most effective model for this dataset.
-                   
-            - **ARIMA models** are ideal for simpler, univariate time series with clear trends and seasonality, where interpretability is important.
-            - **Machine learning models** are better suited for complex, high-dimensional datasets with non-linear relationships, external factors, and long-term forecasting needs.
-
-            The choice between the two depends on the nature of the data, the complexity of the problem, and the forecasting requirements. In practice, hybrid approaches (e.g., combining ARIMA with machine learning) are also common to leverage the strengths of both methods.
-        """)
-
 
 
 
@@ -835,7 +836,50 @@ if len(df)>0 and 'Value' in df.columns:
             short_data_selected['DateHour'] = short_data_selected['Timestamp'].dt.strftime('%d/%m/%Y %H:%M') 
             short_data_arima = short_data_selected[['DateHour', 'Value']]
 
+
             short_data_arima.to_csv(r'short_No2_data_arima.csv', index=False)
+
+            # Convert the "DateHour" column to datetime format
+            short_data_arima['DateHour'] = pd.to_datetime(short_data_arima['DateHour'], dayfirst = True)
+
+            # Sort the DataFrame by the "Date" column to ensure that the timestamps are in ascending order.
+            short_data_arima = short_data_arima.sort_values(by='DateHour')
+
+            # Calculate the time differences between consecutive timestamps
+            # time_diffs = data_arima['DateHour'].diff()
+
+
+            col1,col2 =  st.columns(2) 
+
+            with col1.container(height=600):
+
+                c1,c2,c3 = st.columns([2,3,1])
+                c2.subheader('ACF Plot')
+                # Plot ACF
+                plot_acf(short_data_arima['Value'], lags=48)  # Change lags value according to your data
+                plt.title('ACF Plot')
+                plt.xlabel('Lag')
+                plt.ylabel('Autocorrelation')
+                plt.show()
+
+                st.pyplot(plt)
+
+
+
+            with col2.container(height=600):
+
+                c1,c2,c3 = st.columns([2,3,1])
+                c2.subheader('PACF Plot')
+                # Plot PACF
+                plot_pacf(short_data_arima['Value'], lags=48)  # Change lags value according to your data
+                plt.title('PACF Plot')
+                plt.xlabel('Lag')
+                plt.ylabel('Partial Autocorrelation')
+                plt.show()
+
+
+
+                st.pyplot(plt)
     
 
 
@@ -872,7 +916,6 @@ if len(df)>0 and 'Value' in df.columns:
             plt.tight_layout()
             plt.show()
 
-            col1,col2 =  st.columns(2) 
 
 
             with col1.container(height=600):

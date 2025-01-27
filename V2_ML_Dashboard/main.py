@@ -29,7 +29,7 @@ import gc
 
 st.set_page_config(layout='wide')
 
-st.header('NO2 level Forecaster')
+st.header('NO2 level Analysing & Forecasting')
 
 
 data_file = st.file_uploader('Upload file containing Timestamp and Value',type='csv')
@@ -473,6 +473,11 @@ if len(df)>0 and 'Value' in df.columns:
 
     # model_selection = st.selectbox('Choose a model for forecasting (Random Forest seems to provide better results):',options=['Random Forest','Gradient Boost Regressor','SVR','ANN'], index=None)
 
+    st.session_state.models_run = False
+    st.session_state.arima_run = False
+
+
+
     @st.fragment
     def train_models():
         train_model_button = st.button('Start training ML Models')
@@ -720,15 +725,16 @@ if len(df)>0 and 'Value' in df.columns:
                     ],
                     "Results": [
                         "Mean Squared Error: 87.58514344123985\nR² Score: -0.011607182429077727",
-                        "Mean Squared Error: 74.07997087517605\nR² Score: 0.14432439075618184",
-                        "Mean Squared Error: 20.9620748988467\nR² Score: 0.7578883340766396",
-                        "Mean Squared Error: 82.54095167346962\nR² Score: 0.04665307590534107",
+                        "Mean Squared Error: 0.09722533529960477\nR² Score: 0.16039535114709946",
+                        "Mean Squared Error: 0.1689098881399603\nR² Score: 0.797047990230989",
+                        "Mean Squared Error: 0.10782718665217803\nR² Score: 0.06884139913821286",
                     ],
                     "Analysis": [
-                        "The SVR model has the highest MSE and a negative R² score, indicating poor performance and that the model does not fit the data well.",
-                        "The GBR model performs better than SVR with a lower MSE and a positive R² score, suggesting a better fit to the data but still not optimal.",
-                        "The RFR model has the lowest MSE and the highest R² score, indicating the best performance among the 4 models. It suggests a good fit to the data.",
-                        "ANN has a relatively high MSE and a low R² score, showing moderate performance.",
+                        "The SVR model has the highest MSE and a negative R² score, indicating poor performance and that the model does not fit the data well. Perhaps sensitive to scale,noise,outliers. Need further feature engineer. ",
+            		"GBR performed better than SVR, with a significantly lower MSE. However, the R² score is still low, indicating that the model explains only a small portion of the variance in the data.",
+                        "RFR performed well, with a low MSE and a highest R² score. It explains a significant portion of the variance in the data, making it one of the best-performing models in this analysis. The model can deal with nonlinear relationship, is robust to overfitting, and flexible enough to capture feature interactions, less impact by outliers and noise",
+                         "ANN has a low MSE, but its R² score is very low, indicating that it does not explain much of the variance in the data. This suggests that the model may not be well-suited for this problem, perhaps sensitive to noise/outliers or requires more complex tuning",
+
                     ],
                 }
 
@@ -741,18 +747,9 @@ if len(df)>0 and 'Value' in df.columns:
                 # Display the table
                 st.table(df)
 
-                
-                st.markdown("""
-                    ### **Conclusion**
-                    - The **Random Forest Regression** model outperforms the other models in terms of both MSE and R² score, making it the most effective model for this dataset.
-                        
-                    - **ARIMA models** are ideal for simpler, univariate time series with clear trends and seasonality, where interpretability is important.
-                    - **Machine learning models** are better suited for complex, high-dimensional datasets with non-linear relationships, external factors, and long-term forecasting needs.
+            st.session_state.models_run = True
 
-                    The choice between the two depends on the nature of the data, the complexity of the problem, and the forecasting requirements. In practice, hybrid approaches (e.g., combining ARIMA with machine learning) are also common to leverage the strengths of both methods.
-                """)
-
-
+            show_conclusion()
 
 
 
@@ -984,4 +981,21 @@ if len(df)>0 and 'Value' in df.columns:
             # del data_arima # As it is no longer required
             # gc.collect()
 
+            st.session_state.arima_run = True
+            show_conclusion()
     arima_forecast()
+
+
+        
+    def show_conclusion():
+        if st.session_state.models_run == True and st.session_state.arima_run == True:      
+            with st.container(border=2):    
+                st.markdown("""
+                    ### **Conclusion**
+                    - The **Random Forest Regression** model outperforms the other models in terms of both MSE and R² score, making it the most effective model for this dataset.
+                        
+                    - **ARIMA models** are ideal for simpler, univariate time series with clear trends and seasonality, where interpretability is important.
+                    - **Machine learning models** are better suited for complex, high-dimensional datasets with non-linear relationships, external factors, and long-term forecasting needs.
+
+                    For Furture development we should look at the Hybrid Model to Combine ARIMA with RFR could leverage the strengths of both statistical and machine learning approaches, improving prediction accuracy and robustness.
+                """)

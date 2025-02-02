@@ -12,7 +12,7 @@ link: https://github.com/wendydonzse/CapstoneProject/blob/f7bb4141afeae8e56781ef
 
 ## Documentation
 1. V2_ML_Dashboard: a dashboard design with Streamlit cloud deployed GitHub link.
-2. Final_Copy.ipynb: the Yupyter Notebook file with all the coding on analysis and ML models training on NO2 dataset through out 18 years from 01/01/2006 till now ( Nov2024)
+2. Final_Copy.ipynb: the Jupyter Notebook file with all the coding on analysis and ML models training on NO2 dataset through out 18 years from 01/01/2006 till now ( Nov2024)
 3. Streamlit_data_Evaluation.ipynb is the Jupyter Notebook file where we retrain the ML models with different dataset - 2 years - It works beautifully and fast.
 
 ## 🚀 About Me
